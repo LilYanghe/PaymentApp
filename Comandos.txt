@@ -1,0 +1,14 @@
+Inicar app
+python app.py
+
+Instalar requirements
+pip install -r requirements.txt
+
+Crear entorno 
+python -m venv venv
+
+Activar entorno
+venv\Scripts\activate
+
+Ruta de app
+cd C:\Users\GRUPO KADOSH\Documents\Alberto\My_Projects\PaymentApp

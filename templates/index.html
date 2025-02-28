@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Lista de Pagos{% endblock %}
+{% block content %}
+    <h1>Lista de Pagos</h1>
+
+    <form action="{{ url_for('index') }}" method="post">
+        <label for="date">Fecha:</label>
+        <input type="date" id="date" name="date" value="{{ selected_date }}">
+        
+        <label for="payment_type">Tipo de Pago:</label>
+        <select id="payment_type" name="payment_type">
+            <option value="">Todos</option>
+            <option value="efectivo" {% if selected_payment_type == 'efectivo' %}selected{% endif %}>Efectivo</option>
+            <option value="banca" {% if selected_payment_type == 'banca' %}selected{% endif %}>Banca</option>
+        </select>
+        
+        <button type="submit">Filtrar</button>
+    </form>
+
+    <h2>Montos Totales del Día</h2>
+    <p><strong>Monto Total del Día:</strong> {{ total_amount }}</p>
+    <p><strong>Monto Total Efectivo:</strong> {{ total_efectivo }}</p>
+    <p><strong>Monto Total Banca:</strong> {{ total_banca }}</p>
+
+    <button onclick="location.href='{{ url_for('add_payment') }}'">Agregar Pago</button>
+    <button onclick="location.href='{{ url_for('summary') }}'">Generar Resumen Diario</button>
+
+    <!-- Selector de cantidad por página -->
+    <form action="{{ url_for('index') }}" method="get" style="margin: 10px 0;">
+        <label for="per_page">Pagos por página:</label>
+        <select id="per_page" name="per_page" onchange="this.form.submit()">
+            <option value="5" {% if per_page == 5 %}selected{% endif %}>5</option>
+            <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+            <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+        </select>
+        <input type="hidden" name="page" value="{{ page }}">
+        <input type="hidden" name="date" value="{{ selected_date }}">
+        <input type="hidden" name="payment_type" value="{{ selected_payment_type }}">
+    </form>
+
+    <table border="1">
+        <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Monto</th>
+            <th>Tipo de Pago</th>
+            <th>Pagador</th>
+            <th>Agrupado</th>
+            <th>Facturado</th>
+            <th>Acciones</th>
+        </tr>
+        {% for payment in payments %}
+        <tr>
+            <td>{{ payment.date }}</td>
+            <td>{{ payment.client }}</td>
+            <td>{{ payment.amount }}</td>
+            <td>{{ payment.payment_type }}</td>
+            <td>{{ payment.payer_name }}</td>
+            <td>
+                <input type="checkbox" {% if payment.grouped %}checked{% endif %} onchange="updateGrouped({{ payment.id }}, this.checked)">
+            </td>
+            <td>{{ 'Sí' if payment.facturado else 'No' }}</td>
+            <td>
+                <button onclick="location.href='{{ url_for('edit_payment', payment_id=payment.id) }}'">Editar</button>
+                <form action="{{ url_for('delete_payment') }}" method="post" style="display:inline;">
+                    <input type="hidden" name="id" value="{{ payment.id }}">
+                    <button type="submit" onclick="return confirm('¿Estás seguro de que deseas eliminar este pago?')">Eliminar</button>
+                </form>
+                <button onclick="location.href='{{ url_for('payment_details', payment_id=payment.id) }}'">Detalles</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <!-- Controles de paginación -->
+    <div style="margin: 20px 0; text-align: center;">
+        {% if page > 1 %}
+            <a href="{{ url_for('index', page=page-1, per_page=per_page, date=selected_date, payment_type=selected_payment_type) }}">Anterior</a>
+        {% endif %}
+        <span>Página {{ page }} de {{ total_pages }} (Total: {{ total_payments }} pagos)</span>
+        {% if page < total_pages %}
+            <a href="{{ url_for('index', page=page+1, per_page=per_page, date=selected_date, payment_type=selected_payment_type) }}">Siguiente</a>
+        {% endif %}
+    </div>
+
+    <script>
+    function updateGrouped(paymentId, isChecked) {
+        $.ajax({
+            url: '{{ url_for("update_grouped") }}',
+            type: 'POST',
+            data: {
+                id: paymentId,
+                grouped: isChecked
+            },
+            success: function(response) {
+                if (response.success) {
+                    console.log('Estado de Agrupado actualizado correctamente');
+                } else {
+                    console.error('Error al actualizar el estado de Agrupado:', response.error);
+                }
+            },
+            error: function() {
+                console.error('Error en la solicitud AJAX');
+            }
+        });
+    }
+    </script>
+{% endblock %}

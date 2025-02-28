@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Agregar Pago{% endblock %}
+{% block content %}
+    <h1>Agregar Pago</h1>
+    <form action="{{ url_for('add_payment') }}" method="post">
+        <input type="hidden" name="date_filter" value="{{ date }}">
+        <label for="client">Cliente:</label>
+        <input type="text" id="client" name="client" required>
+
+        <label for="date">Fecha:</label>
+        <input type="date" id="date" name="date" value="{{ date }}" required>
+
+        <label for="payment_type">Tipo de pago:</label>
+        <select id="payment_type" name="payment_type" onchange="togglePayerField()">
+            <option value="efectivo">Efectivo</option>
+            <option value="banca">Banca</option>
+        </select>
+
+        <div id="payer_name_field" style="display: none;">
+            <label for="payer_name">Nombre del pagador:</label>
+            <input type="text" id="payer_name" name="payer_name">
+        </div>
+
+        <h3>Ítems</h3>
+        <div id="items_container">
+            <div class="item">
+                <label for="item_name">Nombre:</label>
+                <input type="text" class="item_name" name="item_name[]" required>
+                <label for="item_amount">Monto:</label>
+                <input type="number" name="item_amount[]" step="0.01" required>
+                <label for="item_detail">Detalle:</label>
+                <input type="text" name="item_detail[]" placeholder="Detalle adicional">
+                <button type="button" onclick="removeItem(this)">Eliminar</button>
+            </div>
+        </div>
+        <button type="button" onclick="addItem()">Agregar Ítem</button>
+
+        <label>
+            <input type="checkbox" name="is_facturado">
+            Facturado
+        </label>
+
+        <button type="submit">Guardar</button>
+    </form>
+
+    <button onclick="location.href='{{ url_for('index') }}'">Volver a la Lista de Pagos</button>
+
+    <script>
+        const availableItems = {{ available_items | tojson | safe }};
+        
+        function setupAutocomplete(input) {
+            $(input).autocomplete({
+                source: availableItems,
+                minLength: 1
+            });
+        }
+        
+        function addItem() {
+            const container = document.getElementById("items_container");
+            const itemDiv = document.createElement("div");
+            itemDiv.className = "item";
+            itemDiv.innerHTML = `
+                <label for="item_name">Nombre:</label>
+                <input type="text" class="item_name" name="item_name[]" required>
+                <label for="item_amount">Monto:</label>
+                <input type="number" name="item_amount[]" step="0.01" required>
+                <label for="item_detail">Detalle:</label>
+                <input type="text" name="item_detail[]" placeholder="Detalle adicional">
+                <button type="button" onclick="removeItem(this)">Eliminar</button>
+            `;
+            container.appendChild(itemDiv);
+            setupAutocomplete(itemDiv.querySelector(".item_name"));
+            const amountInput = itemDiv.querySelector('input[name="item_amount[]"]');
+            amountInput.onchange = function() {
+                if (this.value <= 0) {
+                    alert("El monto debe ser mayor a 0");
+                    this.value = "";
+                }
+            };
+        }
+        
+        function removeItem(button) {
+            button.parentElement.remove();
+        }
+        
+        function togglePayerField() {
+            const paymentType = document.getElementById("payment_type").value;
+            const payerField = document.getElementById("payer_name_field");
+            payerField.style.display = paymentType === "banca" ? "block" : "none";
+            if (paymentType !== "banca") document.getElementById("payer_name").value = "";
+        }
+        
+        $(document).ready(function() {
+            $(".item_name").each(function() {
+                setupAutocomplete(this);
+            });
+            $("#payment_type").on("change", togglePayerField);
+            togglePayerField(); // Inicializar estado
+        });
+        </script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Resumen Diario{% endblock %}
+{% block content %}
+    <h1>Resumen Diario</h1>
+
+    <form action="{{ url_for('summary') }}" method="post">
+        <label for="date">Fecha:</label>
+        <input type="date" id="date" name="date" value="{{ selected_date }}">
+        <button type="submit">Filtrar</button>
+    </form>
+
+    <h2>Montos Totales del Día</h2>
+    <p><strong>Monto Total del Día:</strong> {{ total_amount }}</p>
+    <p><strong>Monto Total Efectivo:</strong> {{ total_efectivo }}</p>
+    <p><strong>Monto Total Banca:</strong> {{ total_banca }}</p>
+
+    <h2>Ítems Agrupados</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Ítem</th>
+                <th>Monto</th>
+                <th>Monto sin 7%</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in grouped_summary %}
+            <tr>
+                <td>{{ item['item'] }}</td>
+                <td>{{ format_number(item['total_amount']) }}</td>
+                <td>{{ format_number(item['total_amount'] / 1.07) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Pagos No Agrupados</h2>
+    {% for payment in ungrouped_summary %}
+    <h3>Pago ID: {{ payment['payment']['id'] }} - Cliente: {{ payment['payment']['client'] }} - Fecha: {{ payment['payment']['date'] }}</h3>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Ítem</th>
+                <th>Monto</th>
+                <th>Monto sin 7%</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in payment['items'] %}
+            <tr>
+                <td>{{ item['item_name'] }}</td>
+                <td>{{ format_number(item['item_amount']) }}</td>
+                <td>{{ format_number(item['item_amount'] / 1.07) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endfor %}
+
+    <button onclick="location.href='{{ url_for('index') }}'">Volver a la Lista de Pagos</button>
+{% endblock %}

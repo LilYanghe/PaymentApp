@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Detalles del Pago{% endblock %}
+{% block content %}
+    <h1>Detalles del Pago</h1>
+
+    <p><strong>ID del Pago:</strong> {{ payment.id }}</p>
+    <p><strong>Cliente:</strong> {{ payment.client }}</p>
+    <p><strong>Fecha:</strong> {{ payment.date }}</p>
+    <p><strong>Tipo de Pago:</strong> {{ payment.payment_type }}</p>
+    <p><strong>Pagador:</strong> {{ payment.payer_name }}</p>
+    <p><strong>Monto Total:</strong> {{ payment.amount }}</p>
+    <p><strong>Agrupado:</strong> {{ 'Sí' if payment.grouped else 'No' }}</p>
+    <p><strong>Facturado:</strong> {{ 'Sí' if payment.facturado else 'No' }}</p>
+
+    <h2>Ítems del Pago</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Nombre del Ítem</th>
+                <th>Monto</th>
+                <th>Monto sin 7%</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.item_name }}</td>
+                <td>{{ item.item_amount }}</td>
+                <td>{{ item.item_amount / 1.07 | round(2) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button onclick="location.href='{{ url_for('index') }}'">Volver a la Lista de Pagos</button>
+{% endblock %}
